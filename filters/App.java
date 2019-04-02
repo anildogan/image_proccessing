@@ -3,14 +3,9 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-/*
-Image Processing Homework-2
-#############
-Name: Anil Dogan
-Std. no.:20170808071
-*/
 
-public class imageHW2 {
+
+public class App {
     public static void main(String args[]) throws IOException{
         //Resize operations
         BufferedImage resizeImg = ImageIO.read(new File("sourceImages/sampleImage.png"));
