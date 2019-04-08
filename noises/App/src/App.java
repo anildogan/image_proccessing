@@ -19,7 +19,7 @@ public class App {
         ImageIO.write(fixSaltPepper(ImageIO.read(new File("output/salt&PepperNoised.png"))), "png", new File("output/salt&fix.png"));
         ImageIO.write(gaussianNoise(img, 10), "png", new File("output/gaussianNoised.png"));
         img = ImageIO.read(new File("sourceImages/lena.png"));
-        ImageIO.write(ifft2(fastFourierOnImage(img)), "png", new File("output/fft.png"));
+        ImageIO.write(fastFourierOnImage(img), "png", new File("output/fft.png"));
         //twoDfft(img);
 
     }

@@ -15,8 +15,8 @@
       <file leaf-file-name="App.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/App.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="285">
-              <caret line="258" column="56" selection-start-line="258" selection-start-column="56" selection-end-line="258" selection-end-column="56" />
+            <state relative-caret-position="266">
+              <caret line="14" column="63" lean-forward="true" selection-start-line="14" selection-start-column="63" selection-end-line="14" selection-end-column="63" />
               <folding>
                 <element signature="imports" expanded="true" />
                 <element signature="method#makeGray#0;class#App#0" />
@@ -91,7 +91,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>fft</find>
       <find>GETC</find>
       <find>imgtomat</find>
       <find>fft1</find>
@@ -99,6 +98,7 @@
       <find>scale</find>
       <find>imag</find>
       <find>rgbtoi</find>
+      <find>fft</find>
     </findStrings>
   </component>
   <component name="IdeDocumentHistory">
@@ -247,12 +247,12 @@
       <option name="presentableId" value="Default" />
       <updated>1554750819204</updated>
       <workItem from="1554750822154" duration="193000" />
-      <workItem from="1554751087746" duration="6242000" />
+      <workItem from="1554751087746" duration="6565000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="6435000" />
+    <option name="totallyTimeSpent" value="6758000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-7" y="-7" width="1550" height="878" extended-state="6" />
@@ -375,8 +375,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/App.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="285">
-          <caret line="258" column="56" selection-start-line="258" selection-start-column="56" selection-end-line="258" selection-end-column="56" />
+        <state relative-caret-position="266">
+          <caret line="14" column="63" lean-forward="true" selection-start-line="14" selection-start-column="63" selection-end-line="14" selection-end-column="63" />
           <folding>
             <element signature="imports" expanded="true" />
             <element signature="method#makeGray#0;class#App#0" />
