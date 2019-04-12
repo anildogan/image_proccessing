@@ -1,179 +1,10 @@
-
-import com.sun.media.sound.FFT;
-
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.nio.Buffer;
-import java.util.Arrays;
-import java.util.Random;
 
-public class App {
-
-    public static void main(String[] args) throws IOException {
-
-        BufferedImage img = ImageIO.read(new File("sourceImages/lena.png"));
-        ImageIO.write(saltPepperNoise(img, 10), "png", new File("output/salt&PepperNoised.png"));
-        ImageIO.write(fixSaltPepper(ImageIO.read(new File("output/salt&PepperNoised.png"))), "png", new File("output/salt&fix.png"));
-        ImageIO.write(gaussianNoise(img, 10), "png", new File("output/gaussianNoised.png"));
-        img = ImageIO.read(new File("sourceImages/lena.png"));
-        ImageIO.write(fastFourierOnImage(img), "png", new File("output/fft.png"));
-        //twoDfft(img);
-
-    }
-
-    //salt pepper
-    public static BufferedImage saltPepperNoise(BufferedImage img, double prob) {
-        int w = img.getWidth(), h = img.getHeight();
-        img = makeGray(img);
-        for (int i = 0; i < h; i++) {
-            for (int j = 0; j < w; j++) {
-                Color c = new Color(img.getRGB(j, i));
-                int red = (int) (c.getRed());
-                int green = (int) (c.getGreen());
-                int blue = (int) (c.getBlue());
-                Color newColor = new Color(red, green, blue);
-                int rgb = range(newColor.getRGB(), prob);
-                img.setRGB(j, i, rgb);
-            }
-        }
-        System.out.println("Salt and pepper noise with probability of " + prob + " applied successfully");
-        return img;
-    }
-
-    public static int range(int n, double prob) {
-        if (prob == 0) return 255;
-        double res = ((100 * prob) / 10);
-
-        int[] array = new int[(int) res];
-        array[0] = 1;
-        array[1] = 255;
-
-
-        for (int i = 2; i <= res - 2; i++) {
-            array[i] = n;
-        }
-        int rnd = new Random().nextInt(array.length);
-        return array[rnd];
-    }
-
-    public static BufferedImage makeGray(BufferedImage img) {
-
-        for (int x = 0; x < img.getWidth(); ++x) {
-            for (int y = 0; y < img.getHeight(); ++y) {
-                int rgb = img.getRGB(x, y);
-                int r = (rgb >> 16) & 0xFF;
-                int g = (rgb >> 8) & 0xFF;
-                int b = (rgb & 0xFF);
-
-                // Normalize and gamma correct:
-                double rr = Math.pow(r / 255.0, 2.2);
-                double gg = Math.pow(g / 255.0, 2.2);
-                double bb = Math.pow(b / 255.0, 2.2);
-                // Calculate luminance:
-
-
-                double lum = 0.2126 * rr + 0.7152 * gg + 0.0722 * bb;
-                // Gamma compand and rescale to byte range:
-                int grayLevel = (int) (255.0 * Math.pow(lum, 1.0 / 2.2));
-                int gray = (grayLevel << 16) + (grayLevel << 8) + grayLevel;
-
-                Color q = new Color(gray);
-                img.setRGB(x, y, q.getRGB());
-            }
-        }
-        return img;
-    }
-
-    //Fix salt pepper
-    public static BufferedImage medianFilter(BufferedImage img) {
-        Color[] pixel = new Color[9];
-        int[] R = new int[9];
-        int[] B = new int[9];
-        int[] G = new int[9];
-        for (int i = 1; i < img.getWidth() - 1; i++)
-            for (int j = 1; j < img.getHeight() - 1; j++) {
-                pixel[0] = new Color(img.getRGB(i - 1, j - 1));
-                pixel[1] = new Color(img.getRGB(i - 1, j));
-                pixel[2] = new Color(img.getRGB(i - 1, j + 1));
-                pixel[3] = new Color(img.getRGB(i, j + 1));
-                pixel[4] = new Color(img.getRGB(i + 1, j + 1));
-                pixel[5] = new Color(img.getRGB(i + 1, j));
-                pixel[6] = new Color(img.getRGB(i + 1, j - 1));
-                pixel[7] = new Color(img.getRGB(i, j - 1));
-                pixel[8] = new Color(img.getRGB(i, j));
-                for (int k = 0; k < 9; k++) {
-                    R[k] = pixel[k].getRed();
-                    B[k] = pixel[k].getBlue();
-                    G[k] = pixel[k].getGreen();
-                }
-                Arrays.sort(R);
-                Arrays.sort(G);
-                Arrays.sort(B);
-                img.setRGB(i, j, new Color(R[4], B[4], G[4]).getRGB());
-            }
-        return img;
-    }
-
-    public static BufferedImage fixSaltPepper(BufferedImage img) {
-        System.out.println("Salt and pepper noise fixed with median filter");
-        return medianFilter(img);
-    }
-
-    //gausisan noise
-    public static BufferedImage gaussianNoise(BufferedImage originalImage, double sigma) {
-        double mean = 0;
-
-        double variance = sigma * sigma;
-
-
-        int width = originalImage.getWidth();
-        int height = originalImage.getHeight();
-
-        BufferedImage filteredImage = new BufferedImage(width, height, originalImage.getType());
-
-        double a = 0.0;
-        double b = 0.0;
-
-
-        for (int i = 0; i < width; i++) {
-            for (int j = 0; j < height; j++) {
-
-                while (a == 0.0)
-                    a = Math.random();
-                b = Math.random();
-
-                double x = Math.sqrt(-2 * Math.log(a)) * Math.cos(2 * Math.PI * b);
-                double noise = mean + Math.sqrt(variance) * x;
-
-
-                int gray = new Color(originalImage.getRGB(i, j)).getRed();
-                int alpha = new Color(originalImage.getRGB(i, j)).getAlpha();
-
-                double color = gray + noise;
-                if (color > 255)
-                    color = 255;
-                if (color < 0)
-                    color = 0;
-
-                int newColor = (int) Math.round(color);
-                Color c = new Color(newColor, newColor, newColor, alpha);
-
-                filteredImage.setRGB(i, j, c.getRGB());
-
-            }
-        }
-
-
-        System.out.println("Gaussian noise with sigma " + sigma + " applied successfully");
-        return filteredImage;
-    }
-
-    //fft
-
-
+public class FFT {
 
 
     public static BufferedImage RGBtoImage(int[][][] m) {
@@ -189,7 +20,7 @@ public class App {
         return output_img;
     }
 
-    // One dimensional Fast Fourier Transform, online open source
+    // One dimensional Fast Fourier Transform
     public static Complex[] fft1(Complex[] array) {
         int n = array.length;
 
@@ -255,17 +86,50 @@ public class App {
         }
         return output;
     }
-    public static BufferedImage fastFourierOnImage(BufferedImage image){
+    public static void fastFourierOnImage(BufferedImage image) throws IOException
+
+    {
         int w0 = image.getWidth();
         int h0 = image.getHeight();
         int [][][] colors = shift_to_center(imgToMatrix(image, w0, h0));
         Complex [][][] f = getComplexMatrix(colors);
         Complex [][][] F = fft2(f);
+        BufferedImage fe = complexToImg(F,true); //filtered image
+        System.out.println("FFT applied succesfully");
+        ImageIO.write(fe, "png", new File( "output/fftOutputs/fftImage.png")); //save filtered image to current folder
 
 
-        return complexToImg(F, true);
+        int w = F.length;
+        int h = F[0].length;
+        Complex [][] H = new Complex [w][h];
+        int r0 = 55;
+        H = ButterWorth(w,h,r0,15,true);
+        Complex [][][] m_filt = FtimesH(F, H); //apply filter on image F
+
+
+        BufferedImage fftImg = complexToImg(m_filt,true); //filtered spectrum
+        Complex [][][] filted = ifft2(m_filt);
+
+        if (w != w0 || h != h0) filted = crop(filted, w0, h0); //if size changed, then resize it
+
+        BufferedImage fftImge = complexToImg(filted,false); //filtered image
+        System.out.println("Butterworth filter applied to spectrum successfully!");
+        ImageIO.write(fftImg, "png", new File(  "output/fftOutputs/fftFiltImg.jpg")); //save filtered spectrum image to current folder
+        System.out.println("The fixed image created successfully");
+        ImageIO.write(fftImge, "png", new File( "output/fftOutputs/filtImage.jpg")); //save filtered image to current folder
+
+
     }
 
+    public static BufferedImage InversefastFourierOnImage(BufferedImage image){
+        int w0 = image.getWidth();
+        int h0 = image.getHeight();
+        int [][][] colors = shift_to_center(imgToMatrix(image, w0, h0));
+        Complex [][][] f = getComplexMatrix(colors);
+        Complex [][][] filted = ifft2(f);
+        return complexToImg(filted,true);
+
+    }
 
     // inverse FFT, ifft online open source
     public static Complex[] ifft1(Complex[] x) {
@@ -288,26 +152,51 @@ public class App {
         }
         return y;
     }
+    //w h is the original size of image, Crop the padded image to original size
+    public static Complex [][][] crop(Complex [][][] F, int w, int h){
+        Complex [][][] output = new Complex [w][h][3];
+        for (int k = 0; k <3; k++){
+            for (int j = 0; j < h; j++){
+                for (int i = 0; i < w; i++){
+                    output[i][j][k] = F[i][j][k];
 
+                }
+            }
+        }
+        return output;
+    }
+    public static Complex [][][] FtimesH(Complex[][][] F, Complex[][] H){
+        int w = F.length;
+        int h = F[0].length;
+        Complex [][][] result = new Complex [w][h][3];
+        for (int k = 0; k <3; k++){
+            for (int j = 0; j < h; j++){
+                for (int i = 0; i < w; i++){
+                    result[i][j][k] = F[i][j][k].times(H[i][j]);
+
+                }
+            }
+        }
+        return result;
+    }
     //two dimensional inverse fast Fourier Transform
-    public static BufferedImage ifft2(BufferedImage img) {
-        Complex[][][] m = getComplexMatrix(imgToMatrix(img,img.getWidth(),img.getHeight()));
+    public static Complex[][][] ifft2 (Complex[][][] m){
         int w = m.length;
         int h = m[0].length;
         Complex[][][] output = new Complex[w][h][3];
-        Complex[] row = new Complex[w];
-        Complex[] col = new Complex[h];
-        for (int k = 0; k < 3; k++) {
-            for (int j = 0; j < h; j++) {
-                for (int i = 0; i < w; i++) {
+        Complex [] row = new Complex [w];
+        Complex [] col = new Complex [h];
+        for (int k = 0; k <3; k++){
+            for (int j = 0; j < h; j++){
+                for (int i = 0; i < w; i++){
                     row[i] = m[i][j][k];
                 }
                 row = ifft1(row);
                 for (int i = 0; i < w; i++)
                     output[i][j][k] = row[i];
             }
-            for (int i = 0; i < w; i++) {
-                for (int j = 0; j < h; j++) {
+            for (int i = 0; i < w; i++){
+                for (int j = 0; j < h; j++){
                     col[j] = output[i][j][k];
                 }
                 col = ifft1(col);
@@ -315,7 +204,7 @@ public class App {
                     output[i][j][k] = col[j];
             }
         }
-        return complexToImg(output,true);
+        return output;
     }
 
 
@@ -460,8 +349,54 @@ public class App {
     }
 
 
+    //Circular filter, ro is cutoff frequency, LowPass = False means highpass
+    public static Complex [][] circularFilter(int w, int h, int r0, Boolean LowPass){
+        Complex [][] filter = new Complex [w][h];
+        int centerX = w/2;
+        int centerY = h/2;
 
-
+        for (int j = 0; j < h; j++){
+            for (int i = 0; i < w; i++){
+                int r = (int)Math.hypot(i-centerX,j-centerY);
+                if (LowPass){
+                    if (r <= r0){
+                        filter[i][j] = new Complex(1,0);
+                    }
+                    else{
+                        filter[i][j] = new Complex(0,0);
+                    }
+                }
+                else{
+                    if (r > r0){
+                        filter[i][j] = new Complex(1,0);
+                    }
+                    else{
+                        filter[i][j] = new Complex(0,0);
+                    }
+                }
+            }
+        }
+        return filter;
+    }
+    public static Complex [][] ButterWorth(int w, int h, int r0, int p, Boolean LowPass){
+        Complex [][] H = new Complex [w][h];
+        int centerX = w/2;
+        int centerY = h/2;
+        for (int j = 0; j < h; j++){
+            for (int i = 0; i < w; i++){
+                double r = Math.hypot(i-centerX,j-centerY);
+                double z = 0;
+                if (LowPass){
+                    z = r/(double)r0;
+                }
+                else{
+                    z = (double)r0/r;
+                }
+                double re = 1/(1+Math.pow(z, 2*p));
+                H[i][j] = new Complex(re,0);
+            }
+        }
+        return H;
+    }
 }
-
 
